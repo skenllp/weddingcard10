@@ -4,8 +4,9 @@
 'use strict';
 
 document.addEventListener('DOMContentLoaded', () => {
-  initPreloader();
-  initArchReveal();
+  initGate();
+  // initPreloader();  — preloader commented out; gate is the entry point
+  // initArchReveal(); — arch commented out; hero starts in revealed state
   initMusicToggle();
   initSideNav();
   initHeroParallax();
@@ -203,3 +204,50 @@ function initHeroParallax() {
     });
   });
 })();
+
+/* ---- Opening gate (tap-to-enter) ---- */
+function initGate() {
+  const gate     = document.getElementById('gate');
+  const enterBtn = document.getElementById('gate-enter');
+  if (!gate || !enterBtn) return;
+
+  let opened = false;
+
+  function openGate() {
+    if (opened) return;
+    opened = true;
+
+    // Stage 1: gate content fades/blurs away
+    gate.classList.add('gate-closing');
+
+    // Stage 2: unlock scrolling + reveal content underneath
+    document.body.classList.remove('gate-active');
+    document.body.classList.add('page-loaded');
+
+    // Stage 3: fully remove gate from flow after transition completes
+    window.setTimeout(() => {
+      gate.classList.add('gate-hidden');
+      gate.setAttribute('aria-hidden', 'true');
+    }, 1100);
+
+    // Auto-start music (arch is disabled; gate is now the entry trigger)
+    const music    = document.getElementById('bgMusic');
+    const musicBtn = document.getElementById('musicToggle');
+    if (music && musicBtn) {
+      music.volume = 0.55;
+      music.play()
+        .then(() => musicBtn.classList.add('is-playing'))
+        .catch(() => {
+          // Autoplay blocked — user can tap the music button manually
+        });
+    }
+  }
+
+  enterBtn.addEventListener('click', openGate);
+  enterBtn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openGate();
+    }
+  });
+}
